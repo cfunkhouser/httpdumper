@@ -6,7 +6,7 @@ ENV GOBIN /bin
 COPY . /httpdumper
 WORKDIR /httpdumper
 
-RUN go install
+RUN go install ./cmd/httpdumper
 
 EXPOSE 8080
 CMD [ "/bin/httpdumper" ]
