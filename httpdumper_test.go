@@ -33,7 +33,7 @@ func TestEchoHandlerServeHTTP(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	(&EchoHandler{
-		log: discardLogger(t),
+		Log: discardLogger(t),
 	}).ServeHTTP(w, r)
 
 	resp := w.Result()
