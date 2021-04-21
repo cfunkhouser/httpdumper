@@ -79,3 +79,12 @@ func (t *LoggingTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 
 	return resp, err
 }
+
+// DefaultTransport is a LoggingTransport with the defaults for underlying
+// transport and logger.
+func DefaultTransport() http.RoundTripper {
+	return &LoggingTransport{
+		Transport: http.DefaultTransport,
+		Log:       logrus.StandardLogger(),
+	}
+}
