@@ -1,35 +1,27 @@
 package main
 
 import (
-	"fmt"
+	"flag"
 	"net/http"
-	"net/http/httputil"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/cfunkhouser/httpdumper"
 )
 
-func dump(w http.ResponseWriter, r *http.Request) {
-	rd, err := httputil.DumpRequest(r, true)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, "bad request, couldn't dump")
-		log.WithError(err).Warn("failed to dump request")
-	}
-	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
-	if _, err := w.Write(rd); err != nil {
-		log.WithError(err).Warn("failed to write to client")
-	}
-	log.WithFields(log.Fields{
-		"protocol": r.Proto,
-		"method":   r.Method,
-		"url":      r.URL.String(),
-		"from":     r.RemoteAddr,
-	}).Info("request dumped")
-}
+var address = flag.String("address", ":8080", "Bind address in host:port format.")
 
 func main() {
-	http.HandleFunc("/", dump)
+	flag.Parse()
+	if *address == "" {
+		log.Fatal("Can't bind an empty address")
+	}
+
+	http.HandleFunc("/", httpdumper.Echo)
 	http.Handle("/metrics", promhttp.Handler())
-	http.ListenAndServe(":8080", nil)
+	log.WithField("address", *address).Info("Server starting")
+	if err := http.ListenAndServe(*address, nil); err != nil {
+		log.WithError(err).Error("Server has exited")
+	}
 }
