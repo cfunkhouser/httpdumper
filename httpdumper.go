@@ -41,3 +41,41 @@ var defaultEchoHandler = &EchoHandler{
 func Echo(w http.ResponseWriter, r *http.Request) {
 	defaultEchoHandler.ServeHTTP(w, r)
 }
+
+// LoggingTransport logs HTTP requests and responses through a http.Client.
+type LoggingTransport struct {
+	Transport http.RoundTripper
+	Log       logrus.FieldLogger
+}
+
+func (t *LoggingTransport) RoundTrip(r *http.Request) (*http.Response, error) {
+	t.Log.WithFields(logrus.Fields{
+		"protocol": r.Proto,
+		"method":   r.Method,
+		"url":      r.URL.String(),
+	}).Info("outgoing request")
+
+	if rd, err := httputil.DumpRequestOut(r, true); err == nil {
+		t.Log.Debug(rd)
+	} else {
+		t.Log.WithError(err).Warn("failed to dump outgoing request")
+	}
+
+	resp, err := t.Transport.RoundTrip(r)
+
+	t.Log.WithFields(logrus.Fields{
+		"code":     resp.StatusCode,
+		"status":   resp.Status,
+		"protocol": r.Proto,
+		"method":   resp.Request.Method,
+		"url":      resp.Request.URL,
+	}).Info("incoming response")
+
+	if rd, err := httputil.DumpResponse(resp, true); err == nil {
+		t.Log.Debug(rd)
+	} else {
+		t.Log.WithError(err).Warn("failed to dump incoming response")
+	}
+
+	return resp, err
+}
