@@ -56,7 +56,7 @@ func (t *LoggingTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 	}).Info("outgoing request")
 
 	if rd, err := httputil.DumpRequestOut(r, true); err == nil {
-		t.Log.Debug(rd)
+		t.Log.Debug(string(rd))
 	} else {
 		t.Log.WithError(err).Warn("failed to dump outgoing request")
 	}
@@ -72,7 +72,7 @@ func (t *LoggingTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 	}).Info("incoming response")
 
 	if rd, err := httputil.DumpResponse(resp, true); err == nil {
-		t.Log.Debug(rd)
+		t.Log.Debug(string(rd))
 	} else {
 		t.Log.WithError(err).Warn("failed to dump incoming response")
 	}
